@@ -2,14 +2,20 @@ package TechNinjas.LocaFacil.Controller;
 
 import TechNinjas.LocaFacil.Model.UsuarioModel;
 import TechNinjas.LocaFacil.Repository.UsuarioRepository;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,9 +72,6 @@ public class UsuarioController {
             return "Email invalido ou em branco";
         }
         UsuarioModel usuario = optUsuario.get();
-        //boolean valid = encoder.matches(email, usuario.getSenha());
-
-        //HttpStatus status = (valid) ? HttpStatus.OK : HttpStatus.UNAUTHORIZED;
         return  "Senha solicitada: " + usuario.getSenha();
     }
 
