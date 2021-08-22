@@ -32,39 +32,43 @@ public class AutenticateJWTFilter extends UsernamePasswordAuthenticationFilter {
         this.authManager = authManager;
     }
 
+
+    //Batendo o erro aqui (parte de criação de username)
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
-        try {
-            UsuarioModel usuario = new ObjectMapper().readValue(request.getInputStream(), UsuarioModel.class);
+        //try {
+            UsuarioModel usuario = new UsuarioModel();
+            usuario.setEmail("admin@gmail.com");
+            usuario.setSenha("1313");
+
+            //Ver isso depois
+            //UsuarioModel usuario = new ObjectMapper().readValue(request.getInputStream(), UsuarioModel.class);
 
             return  authManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    usuario.getEmail(), usuario.getSenha(), new ArrayList<>()
-            ));
-        } catch (IOException e) {
-            throw new RuntimeException("Falha ao autenticar o usuario", e);
-        }
+                    usuario.getEmail(), usuario.getSenha(), new ArrayList<>()));
+        //} catch (IOException e) {
+            //throw new RuntimeException("Falha ao autenticar o usuario", e);
+        //}
     }
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
 
-        UsuarioData usuarioData = (UsuarioData) authResult.getPrincipal(); //Esse puxa o usuario
-        String token = JWT.create().withSubject(usuarioData.getUsername()). //Esse puxa o token
-                withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_EXPIRACAO)).sign(Algorithm.HMAC512(TOKEN_SENHA));
+        UsuarioData usuarioData = (UsuarioData) authResult.getPrincipal();
+        String token = JWT.create().withSubject(usuarioData.getUsername())
+                        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_EXPIRACAO)).sign(Algorithm.HMAC512(TOKEN_SENHA));
 
-        //Inclui agora na aula
         Cookie cookie = new Cookie("token", token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(60 * 30); // 30 minutos
         response.addCookie(cookie);
-        //
-        response.getWriter().write("token: ");
-        response.getWriter().write(token);
-        response.getWriter().flush();
+
+        //response.getWriter().write("token: ");
+        //response.getWriter().write(token);
+        //response.getWriter().flush();
 
         super.successfulAuthentication(request, response, chain, authResult);
-
     }
 }
