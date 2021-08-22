@@ -1,6 +1,7 @@
 package TechNinjas.LocaFacil.Security;
 
 import TechNinjas.LocaFacil.Services.UsuarioServiceDetails;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,44 +16,71 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import javax.sql.DataSource;
+
 @Configuration
 @EnableWebSecurity
 public class ConfigJWT extends WebSecurityConfigurerAdapter {
-    private final UsuarioServiceDetails userService;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private DataSource dataSource;
+//    private final UsuarioServiceDetails userService;
+//    private final PasswordEncoder passwordEncoder;
 
-    public ConfigJWT(UsuarioServiceDetails userService, PasswordEncoder passwordEncoder) {
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-    }
+//    public ConfigJWT(UsuarioServiceDetails userService, PasswordEncoder passwordEncoder) {
+//        this.userService = userService;
+//        this.passwordEncoder = passwordEncoder;
+//    }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
-    }
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
+//    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/login").permitAll()
+                //.antMatchers(HttpMethod.POST, "/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().permitAll()
+                   .formLogin().permitAll()
                 .and()
-                .addFilter(new AutenticateJWTFilter(authenticationManager()))
-                .addFilter(new ValidateJWTFilter(authenticationManager()))
+//                   .addFilter(new AutenticateJWTFilter(authenticationManager()))
+//                   .addFilter(new ValidateJWTFilter(authenticationManager()))
+                .addFilter(jwtUsernamePasswordAuthenticationFilter())
+                .addFilter(jwtBasicAuthenticationFilter())
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout"));
     }
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource(){
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-        CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
-        source.registerCorsConfiguration( "/**", corsConfiguration);
-
-        return source;
+    public JWTUsernamePasswordAuthenticationFilter jwtUsernamePasswordAuthenticationFilter() throws Exception {
+        JWTUsernamePasswordAuthenticationFilter jwtUsernamePasswordAuthenticationFilter = new JWTUsernamePasswordAuthenticationFilter();
+        jwtUsernamePasswordAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        return jwtUsernamePasswordAuthenticationFilter;
     }
+
+    @Bean
+    public JWTBasicAuthenticationFilter jwtBasicAuthenticationFilter() throws Exception {
+        return new JWTBasicAuthenticationFilter(authenticationManager());
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.jdbcAuthentication()
+                .dataSource(this.dataSource)
+                .usersByUsernameQuery("select email, senha, 1 from usuario where email = ?")
+                .authoritiesByUsernameQuery("select ?, 'ROLE_USER';");
+    }
+
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource(){
+//        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//
+//        CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
+//        source.registerCorsConfiguration( "/**", corsConfiguration);
+//
+//        return source;
+//    }
 }

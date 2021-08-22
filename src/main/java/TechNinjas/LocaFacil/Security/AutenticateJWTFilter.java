@@ -66,7 +66,7 @@ public class AutenticateJWTFilter extends UsernamePasswordAuthenticationFilter {
         response.addCookie(cookie);
 
         response.getWriter().write("Login autenticado");
-//        response.getWriter().write(token);
+        response.getWriter().write(token);
         response.getWriter().flush();
 
         super.successfulAuthentication(request, response, chain, authResult);

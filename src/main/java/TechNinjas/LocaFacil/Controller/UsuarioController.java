@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpSession;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +32,9 @@ public class UsuarioController {
 
     @GetMapping("/listarTodos")
     @ApiOperation(value = "Retorna lista de usuarios")
-    public ResponseEntity<List<UsuarioModel>> listarTodos() {
+    public ResponseEntity<List<UsuarioModel>> listarTodos(Principal principal) {
+        String loginDoUsuario = principal.getName();
+        UsuarioModel usuario = repository.findByEmail(loginDoUsuario).get();
         return ResponseEntity.ok(repository.findAll());
     }
 
@@ -72,7 +76,8 @@ public class UsuarioController {
 
     @PutMapping("/alterarUsuario")
     @ApiOperation(value = "Atualiza usuario")
-    public ResponseEntity<UsuarioModel> alterarUsuario(@RequestBody UsuarioModel usuario) {
+    public ResponseEntity<UsuarioModel> alterarUsuario(@RequestBody UsuarioModel usuario, Principal principal) {
+        String loginDoUsuario = principal.getName();
         return ResponseEntity.ok(repository.save(usuario));
     }
 
@@ -80,5 +85,10 @@ public class UsuarioController {
     @ApiOperation(value = "Deleta usuario")
     public void deleteUsuario(@RequestBody UsuarioModel usuario){
         repository.delete(usuario);
+    }
+
+    private UsuarioModel getUsuarioLogado(HttpSession session){
+        Integer idUsarioLogado = (Integer) session.getAttribute("idUsuarioLogado");
+        return repository.findById(idUsarioLogado).get();
     }
 }
