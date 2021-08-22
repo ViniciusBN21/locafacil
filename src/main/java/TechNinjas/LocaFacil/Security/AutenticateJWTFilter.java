@@ -65,9 +65,9 @@ public class AutenticateJWTFilter extends UsernamePasswordAuthenticationFilter {
         cookie.setMaxAge(60 * 30); // 30 minutos
         response.addCookie(cookie);
 
-        //response.getWriter().write("token: ");
-        //response.getWriter().write(token);
-        //response.getWriter().flush();
+        response.getWriter().write("token: ");
+        response.getWriter().write(token);
+        response.getWriter().flush();
 
         super.successfulAuthentication(request, response, chain, authResult);
     }
